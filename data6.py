@@ -11,6 +11,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import validation_curve
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
 
 df = pd.read_csv(
     'https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data', header=None)
@@ -122,3 +124,21 @@ plt.ylabel('Accuracy')
 plt.ylim([0.8, 1.0])
 plt.tight_layout()
 plt.show()
+
+pipe_svc = make_pipeline(StandardScaler(), SVC(random_state=1))
+param_range = [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
+param_grid = [{'svc__C': param_range, 'svc__kernel': ['linear']},
+              {'svc__C': param_range, 'svc__gamma': param_range, 'svc__kernel': ['rbf']}]
+
+# ハイパーパラメータ値のリストparam_gridを指定し、
+# グリッドサーチを行うGridSerchCVクラスをインスタンス化
+gs = GridSearchCV(estimator=pipe_svc,
+                  param_grid=param_grid,
+                  scoring='accuracy',
+                  cv=10, refit=True, n_jobs=-1)
+gs = gs.fit(X_train, y_train)
+# モデルの最良スコアを出力
+print(gs.best_score_)
+
+# 最良スコアとなるパラメータ値を出力
+print(gs.best_params_)
